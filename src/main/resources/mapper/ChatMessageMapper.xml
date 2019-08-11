@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.mapper.ChatMessageMapper">
+
+    <sql id="baseCol">
+        t_chat_message.id t_chat_message_id, t_chat_message.send_time t_chat_message_send_time,
+        t_chat_message.content t_chat_message_content, t_chat_message.send_user_id t_chat_message_send_user_id,
+        t_chat_message.to_user_id t_chat_message_to_user_id, t_chat_message.read_status t_chat_message_read_status
+    </sql>
+
+    <resultMap id="baseResultMap" type="com.example.model.po.ChatMessage">
+        <id column="t_chat_message_id" property="id" />
+        <result column="t_chat_message_send_time" property="sendTime" />
+        <result column="t_chat_message_content" property="content" />
+        <result column="t_chat_message_send_user_id" property="sendUserId" />
+        <result column="t_chat_message_to_user_id" property="toUserId" />
+        <result column="t_chat_message_read_status" property="readStatus" />
+    </resultMap>
+
+    <sql id="sendUserCol">
+        send_user.id send_user_id, send_user.username send_user_username, send_user.password send_user_password,
+        send_user.email send_user_emial, send_user.nickname send_user_nickname, send_user.birth send_user_birth,
+        send_user.logintime send_user_logintime, send_user.dept_id send_user_dept_id,
+        send_user.head_img_id send_user_head_img_id
+    </sql>
+
+    <sql id="sendUserHeadCol">
+        send_user_head.id send_user_head_id, send_user_head.attachment_address send_user_head_attachment_address
+    </sql>
+
+    <resultMap id="sendUserResultMap" type="com.example.model.po.User">
+        <id column="send_user_id" property="id" />
+        <result column="send_user_username" property="username" />
+        <result column="send_user_password" property="password" />
+        <result column="send_user_email" property="email" />
+        <result column="send_user_nickname" property="nickname" />
+        <result column="send_user_birth" property="birth" />
+        <result column="send_user_logintime" property="logintime" />
+        <result column="send_user_dept_id" property="deptId" />
+        <result column="send_user_head_img_id" property="headImgId" />
+        <association column="send_user_head_img_id" property="headImg" javaType="com.example.model.po.Attachment">
+            <id column="send_user_head_id" property="id" />
+            <result column="send_user_head_attachment_address" property="attachmentAddress" />
+        </association>
+    </resultMap>
+    
+    <sql id="toUserCol">
+        to_user.id to_user_id, to_user.username to_user_username, to_user.password to_user_password,
+        to_user.email to_user_email, to_user.nickname to_user_nickname, to_user.birth to_user_birth,
+        to_user.logintime to_user_logintime, to_user.dept_id to_user_dept_id
+    </sql>
+
+    <sql id="toUserHeadCol">
+        to_user_head.id to_user_head_id, to_user_head.attachment_address to_user_head_attachment_address
+    </sql>
+    
+    <resultMap id="toUserResultMap" type="com.example.model.po.User">
+        <id column="to_user_id" property="id" />
+        <result column="to_user_username" property="username" />
+        <result column="to_user_password" property="password" />
+        <result column="to_user_email" property="email" />
+        <result column="to_user_nickname" property="nickname" />
+        <result column="to_user_birth" property="birth" />
+        <result column="to_user_logintime" property="logintime" />
+        <result column="to_user_dept_id" property="deptId" />
+        <result column="to_user_head_img_id" property="headImgId" />
+        <association column="to_user_head_img_id" property="headImg" javaType="com.example.model.po.Attachment">
+            <id column="to_user_head_id" property="id" />
+            <result column="to_user_head_attachment_address" property="attachmentAddress" />
+        </association>
+    </resultMap>
+
+    <resultMap id="resultMap" type="com.example.model.po.ChatMessage" extends="baseResultMap">
+        <association column="t_chat_message_send_user_id" property="sendUser" resultMap="sendUserResultMap" />
+        <association column="t_chat_message_to_user_id" property="toUser" resultMap="toUserResultMap" />
+    </resultMap>
+
+    <select id="customSelectPage" resultMap="resultMap">
+        select <include refid="baseCol" />,
+               <include refid="sendUserCol" />,
+               <include refid="sendUserHeadCol" />,
+               <include refid="toUserCol" />,
+               <include refid="toUserHeadCol" />
+        from t_chat_message t_chat_message
+        left join t_user send_user on send_user.id = t_chat_message.send_user_id
+        left join t_attachment send_user_head on send_user_head.id = send_user.head_img_id
+        left join t_user to_user on to_user.id = t_chat_message.to_user_id
+        left join t_attachment to_user_head on to_user_head.id = to_user.head_img_id
+        <where>
+            <if test=" params.entity.content != null and params.entity.content != ''.toString() ">
+                and instr(t_chat_message.content, #{params.entity.content}) > 0
+            </if>
+            <if test=" params.map.currentUserId != null and params.map.userId != null ">
+                and (
+                    t_chat_message.send_user_id = #{params.map.userId}
+                    and
+                    t_chat_message.to_user_id = #{params.map.currentUserId}
+                    or
+                    t_chat_message.send_user_id = #{params.map.currentUserId}
+                    and
+                    t_chat_message.to_user_id = #{params.map.userId}
+                )
+            </if>
+            <if test=" params.map.startId != null ">
+                and t_chat_message.id &lt; #{params.map.startId}
+            </if>
+            <if test=" params.entity.sendUserId != null">
+                and t_chat_message.send_user_id = #{params.entity.sendUserId}
+            </if>
+            <if test=" params.entity.toUserId != null ">
+                and t_chat_message.to_user_id = #{params.entity.toUserId}
+            </if>
+            <if test=" params.entity.readStatus != null ">
+                and t_chat_message.read_status = #{params.entity.readStatus}
+            </if>
+        </where>
+        order by t_chat_message.send_time desc
+    </select>
+
+    <select id="customSelectList" parameterType="com.example.params.Params" resultMap="resultMap">
+        select <include refid="baseCol" />,
+               <include refid="sendUserCol" />,
+               <include refid="sendUserHeadCol" />,
+               <include refid="toUserCol" />,
+               <include refid="toUserHeadCol" />
+        from t_chat_message t_chat_message
+        left join t_user send_user on send_user.id = t_chat_message.send_user_id
+        left join t_attachment send_user_head on send_user_head.id = send_user.head_img_id
+        left join t_user to_user on to_user.id = t_chat_message.to_user_id
+        left join t_attachment to_user_head on to_user_head.id = to_user.head_img_id
+        <where>
+            <if test=" params.entity.content != null and params.entity.content != ''.toString() ">
+                and instr(t_chat_message.content, #{params.entity.content}) > 0
+            </if>
+            <if test=" params.map.currentUserId != null and params.map.userId != null ">
+                and (
+                t_chat_message.send_user_id = #{params.map.userId}
+                and
+                t_chat_message.to_user_id = #{params.map.currentUserId}
+                or
+                t_chat_message.send_user_id = #{params.map.currentUserId}
+                and
+                t_chat_message.to_user_id = #{params.map.userId}
+                )
+            </if>
+            <if test=" params.entity.sendUserId != null ">
+                and t_chat_message.send_user_id = #{params.entity.sendUserId}
+            </if>
+            <if test=" params.entity.toUserId != null ">
+                and t_chat_message.to_user_id = #{params.entity.toUserId}
+            </if>
+            <if test=" params.entity.readStatus != null ">
+                and t_chat_message.read_status = #{params.entity.readStatus}
+            </if>
+            <if test=" params.map.ids != null ">
+                <foreach collection="params.map.ids" separator=")or(" index="index" item="item" open="and(" close=")">
+                    t_chat_message.id = #{item}
+                </foreach>
+            </if>
+        </where>
+        order by t_chat_message.send_time desc
+    </select>
+
+    <select id="customSelectById" parameterType="int" resultMap="resultMap">
+        select <include refid="baseCol" />,
+               <include refid="sendUserCol" />,
+               <include refid="sendUserHeadCol" />,
+               <include refid="toUserCol" />,
+               <include refid="toUserHeadCol" />
+        from t_chat_message t_chat_message
+        left join t_user send_user on send_user.id = t_chat_message.send_user_id
+        left join t_attachment send_user_head on send_user_head.id = send_user.head_img_id
+        left join t_user to_user on to_user.id = t_chat_message.to_user_id
+        left join t_attachment to_user_head on to_user_head.id = to_user.head_img_id
+        where t_chat_message.id = #{id}
+    </select>
+
+    <select id="selectSelfById" parameterType="int" resultMap="resultMap">
+        select <include refid="baseCol" />,
+               <include refid="sendUserCol" />,
+               <include refid="sendUserHeadCol" />,
+               <include refid="toUserCol" />,
+               <include refid="toUserHeadCol" />
+        from t_chat_message t_chat_message
+        left join t_user send_user on send_user.id = t_chat_message.send_user_id
+        left join t_attachment send_user_head on send_user_head.id = send_user.head_img_id
+        left join t_user to_user on to_user.id = t_chat_message.to_user_id
+        left join t_attachment to_user_head on to_user_head.id = to_user.head_img_id
+        where t_chat_message.id = #{id}
+        and t_chat_message.to_user_id = #{params.entity.toUserId}
+    </select>
+
+</mapper>

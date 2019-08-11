@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.mapper.SummaryMapper">
+
+    <resultMap id="baseResultMap" type="com.example.model.vo.SummaryVO">
+        <result column="summary_name" property="name" />
+        <result column="summary_value" property="value" />
+    </resultMap>
+
+    <select id="selectBroadcastByTime" parameterType="com.example.params.Params"
+            resultMap="com.example.mapper.BroadcastMessageMapper.baseResultMap">
+        select <include refid="com.example.mapper.BroadcastMessageMapper.baseCol" />
+        from t_broadcast_message t_broadcast_message
+        <where>
+            <if test=" params.map.timeCol != null and params.map.timeCol != ''.toString() ">
+                <if test=" params.map.startTime != null ">
+                    and ${params.map.timeCol} >= #{params.map.startTime}
+                </if>
+                <if test=" params.map.endTime != null ">
+                    and ${params.map.timeCol} &lt; #{params.map.endTime}
+                </if>
+            </if>
+        </where>
+    </select>
+
+    <select id="selectMailByTime" parameterType="com.example.params.Params"
+            resultMap="com.example.mapper.MailMapper.baseResultMap">
+        select <include refid="com.example.mapper.MailMapper.baseCol" />
+        from t_mail t_mail
+        <where>
+            <if test=" params.map.timeCol != null and params.map.timeCol != ''.toString() ">
+                <if test=" params.map.startTime != null ">
+                    and ${params.map.timeCol} >= #{params.map.startTime}
+                </if>
+                <if test=" params.map.endTime != null ">
+                    and ${params.map.timeCol} &lt; #{params.map.endTime}
+                </if>
+            </if>
+        </where>
+    </select>
+
+    <select id="broadcastGroupBySendUser" resultMap="baseResultMap">
+        select send_user.username summary_name, count(t_broadcast_message.id) summary_value
+        from t_broadcast_message t_broadcast_message
+        left join t_user send_user on send_user.id = t_broadcast_message.send_user_id
+        group by t_broadcast_message.send_user_id, send_user.username
+    </select>
+
+    <select id="mailGroupBySendUser" resultMap="baseResultMap">
+        select send_user.username summary_name, count(t_mail.id) summary_value
+        from t_mail t_mail
+        left join t_user send_user on send_user.id = t_mail.send_user_id
+        group by t_mail.send_user_id, send_user.username
+    </select>
+
+    <select id="userGroupBySex" resultMap="baseResultMap">
+        select t_user.sex summary_name, count(t_user.id) summary_value
+        from t_user t_user
+        group by t_user.sex
+    </select>
+
+</mapper>

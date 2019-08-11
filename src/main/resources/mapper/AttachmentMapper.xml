@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.mapper.AttachmentMapper">
+
+    <sql id="baseCol">
+        t_attachment.id t_attachment_id, t_attachment.attachment_name t_attachment_attachment_name,
+        t_attachment.attachment_address t_attachment_attachment_address, t_attachment.attachment_path t_attachment_attachment_path,
+        t_attachment.create_time t_attachment_create_time
+    </sql>
+
+    <resultMap id="baseResultMap" type="com.example.model.po.Attachment">
+        <id column="t_attachment_id" property="id" />
+        <result column="t_attachment_attachment_name" property="attachmentName" />
+        <result column="t_attachment_attachment_address" property="attachmentAddress" />
+        <result column="t_attachment_attachment_path" property="attachmentPath" />
+        <result column="t_attachment_create_time" property="createTime" />
+        <result column="t_attachment_link_info" property="linkInfo" />
+    </resultMap>
+
+    <select id="customSelectPage" resultMap="baseResultMap">
+        select <include refid="baseCol" />, t_attachment.link_info t_attachment_link_info
+        from t_attachment_view t_attachment
+        <where>
+            <if test=" params.entity.attachmentName != null and params.entity.attachmentName != ''.toString() ">
+                and instr(t_attachment.attachment_name, #{params.entity.attachmentName}) > 0
+            </if>
+            <if test=" params.entity.attachmentAddress != null and params.entity.attachmentAddress != ''.toString() ">
+                and instr(t_attachment.attachment_address, #{params.entity.attachmentAddress}) > 0
+            </if>
+            <if test=" params.entity.attachmentPath != null and params.entity.attachmentPath != ''.toString() ">
+                and instr(t_attachment.attachment_path, #{params.entity.attachmentPath}) > 0
+            </if>
+            <if test=" params.entity.linkInfo != null and params.entity.linkInfo != ''.toString() ">
+                and instr(t_attachment.link_info, #{params.entity.linkInfo}) > 0
+            </if>
+        </where>
+        order by t_attachment.create_time desc
+    </select>
+
+    <select id="customSelectById" parameterType="int" resultMap="baseResultMap">
+        select <include refid="baseCol" />, t_attachment.link_info t_attachment_link_info
+        from t_attachment_view t_attachment
+        where t_attachment.id = #{id}
+    </select>
+
+</mapper>

@@ -1,0 +1,75 @@
+# 开发环境
+spring:
+  devtools:
+    restart:
+      enabled: true # 热部署
+      additional-paths: src/main/java # 设置重启的目录
+
+  # 数据源
+  datasource:
+    url: jdbc:mysql://server02:3306/demo?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&useSSL=false
+    username: root
+    password: root
+    druid:
+      initial-size: 5  # 初始化大小
+      min-idle: 5  # 最小
+      max-active: 10  # 最大
+      max-wait: 60000  # 连接超时时间
+      pool-prepared-statements: true # 打开PSCache
+      max-pool-prepared-statement-per-connection-size: 20 # 指定每个连接上的PSCache大小
+
+  # redis
+  redis:
+    # 使用单机redis时将一下两行注释打开
+#    host: localhost # 默认localhost
+#    port: 6379 # 默认6379
+    password: demo # 密码
+    database: 5 # 采用哪个数据库，默认0
+    timeout: 500 # 连接超时时间（毫秒）
+    # 使用sentinel集群时将以下三行注释打开
+    sentinel:
+      master: demomaster # master名称
+      nodes: server01:26379,server01:26380,server01:26381 # sentinel地址
+    lettuce:
+      shutdown-timeout: 100ms
+      pool:
+        max-active: 8 # 连接池最大连接数,默认8个，（使用负值表示没有限制）
+        max-wait: -1 # 连接池最大阻塞等待时间（使用负值表示没有限制）
+        max-idle: 8 # 连接池中的最大空闲连接
+        min-idle: 1 # 连接池中的最小空闲连接
+
+  # kafka
+  kafka:
+    # 以逗号分隔的地址列表，用于建立与Kafka集群的初始连接(kafka 默认的端口号为9092)
+    bootstrap-servers: server02:9092
+
+  # 邮件
+  mail:
+    username: xxxxxx@163.com
+    password: xxxxxx
+
+server:
+  port: 8080
+  jetty:
+    accesslog:
+      enabled: true # 开启访问日志，默认false
+
+log:
+  home: E:/IdeaProjects/logs/dev # 日志目录
+
+attachment:
+  save-dir: E:/IdeaProjects/demofile # 文件保存路径
+
+swagger2:
+  enable: true # 启用swagger2
+
+# sftp
+sftp:
+  host: server02
+  port: 22
+  username: demofile
+  password: demo
+  pool:
+    max-total: 10
+    max-idle: 10
+    min-idle: 5

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.mapper.BroadcastToUserLinkMapper">
+
+    <sql id="baseCol">
+        t_broadcast_to_user_link.broadcast_id t_broadcast_to_user_link_broadcast_id,
+        t_broadcast_to_user_link.to_user_id t_broadcast_to_user_link_to_user_id,
+        t_broadcast_to_user_link.read_status t_broadcast_to_user_link_read_status
+    </sql>
+
+    <resultMap id="baseResultMap" type="com.example.model.po.BroadcastToUserLink">
+        <result column="t_broadcast_to_user_link_broadcast_id" property="broadcastId" />
+        <result column="t_broadcast_to_user_link_to_user_id" property="toUserId" />
+        <result column="t_broadcast_to_user_link_read_status" property="readStatus" />
+    </resultMap>
+
+    <update id="customUpdateBatchById" parameterType="java.util.List">
+        update t_broadcast_to_user_link
+        set read_status =
+        <foreach collection="list" item="item" index="index" separator=" " open=" case " close=" end ">
+            when broadcast_id = #{item.broadcastId} and to_user_id = #{item.toUserId} then #{item.readStatus}
+        </foreach>
+        where
+        <foreach collection="list" item="item" index="index" separator=") or (" open="(" close=")">
+            broadcast_id = #{item.broadcastId} and to_user_id = #{item.toUserId}
+        </foreach>
+    </update>
+
+</mapper>

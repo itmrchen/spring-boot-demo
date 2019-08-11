@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.mapper.ResourceMapper">
+
+    <sql id="baseCol">
+        t_resource.id t_resource_id, t_resource.resource_type t_resource_resource_type,
+        t_resource.resource_category t_resource_resource_category, t_resource.resource_seq t_resource_resource_seq,
+        t_resource.resource_pattern t_resource_resource_pattern, t_resource.resource_method t_resource_resource_method,
+        t_resource.resource_desc t_resource_resource_desc
+    </sql>
+
+    <resultMap id="baseResultMap" type="com.example.model.po.Resource">
+        <id column="t_resource_id" property="id" />
+        <result column="t_resource_resource_type" property="resourceType" />
+        <result column="t_resource_resource_category" property="resourceCategory" />
+        <result column="t_resource_resource_seq" property="resourceSeq" />
+        <result column="t_resource_resource_pattern" property="resourcePattern" />
+        <result column="t_resource_resource_method" property="resourceMethod" />
+        <result column="t_resource_resource_desc" property="resourceDesc" />
+    </resultMap>
+
+    <select id="customSelectPage" resultMap="baseResultMap">
+        select <include refid="baseCol" />
+        from t_resource t_resource
+        <where>
+            <if test=" params.entity.resourceType != null and params.entity.resourceType != ''.toString() ">
+                and t_resource.resource_type = #{params.entity.resourceType}
+            </if>
+            <if test=" params.entity.resourceCategory != null and params.entity.resourceCategory != ''.toString() ">
+                and t_resource.resource_category = #{params.entity.resourceCategory}
+            </if>
+            <if test=" params.entity.resourcePattern != null and params.entity.resourcePattern != ''.toString() ">
+                and instr(t_resource.resource_pattern, #{params.entity.resourcePattern}) > 0
+            </if>
+            <if test=" params.entity.resourceMethod != null and params.entity.resourceMethod != ''.toString() ">
+                and t_resource.resource_method = #{params.entity.resourceMethod}
+            </if>
+            <if test=" params.entity.resourceDesc != null and params.entity.resourceDesc != ''.toString() ">
+                and instr(t_resource.resource_desc, #{params.entity.resourceDesc}) > 0
+            </if>
+        </where>
+        order by t_resource.resource_seq
+    </select>
+
+    <select id="selectAllCategorys" resultType="string">
+        select distinct t_resource.resource_category
+        from demo.t_resource t_resource
+    </select>
+
+</mapper>

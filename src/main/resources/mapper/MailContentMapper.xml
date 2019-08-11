@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.mapper.MailContentMapper">
+
+    <sql id="baseCol">
+        t_mail_content.id t_mail_content_id, t_mail_content.content t_mail_content_content,
+        t_mail_content.mail_id t_mail_content_mail_id
+    </sql>
+
+    <resultMap id="baseResultMap" type="com.example.model.po.MailContent">
+        <id column="t_mail_content_id" property="id" />
+        <result column="t_mail_content_content" property="content" />
+        <result column="t_mail_content_mail_id" property="mailId" />
+    </resultMap>
+
+</mapper>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.mapper.DeptMapper">
+
+    <sql id="baseCol">
+        t_dept.id t_dept_id, t_dept.dept_name t_dept_dept_name, t_dept.level t_dept_level,
+        t_dept.pid t_dept_pid, t_dept.seq t_dept_seq, t_dept.full_name t_dept_full_name,
+        t_dept.is_default t_dept_is_default
+    </sql>
+
+    <resultMap id="baseResultMap" type="com.example.model.po.Dept">
+        <id column="t_dept_id" property="id" />
+        <result column="t_dept_dept_name" property="deptName" />
+        <result column="t_dept_level" property="level" />
+        <result column="t_dept_pid" property="pid" />
+        <result column="t_dept_seq" property="seq" />
+        <result column="t_dept_full_name" property="fullName" />
+        <result column="t_dept_is_default" property="isDefault" />
+    </resultMap>
+
+    <select id="customSelectList" parameterType="com.example.params.Params" resultMap="baseResultMap">
+        select <include refid="baseCol" />
+        from t_dept t_dept
+        <where>
+            <if test=" params.entity.deptName != null and params.entity.deptName != ''.toString() ">
+                and instr(t_dept.dept_name, #{params.entity.deptName}) > 0
+            </if>
+            <if test=" params.entity.fullName != null and params.entity.fullName != ''.toString() ">
+                and instr(t_dept.full_name, #{params.entity.fullName}) > 0
+            </if>
+            <if test=" params.entity.pid != null ">
+                and t_dept.pid = #{params.entity.pid}
+            </if>
+            <if test=" params.entity.level != null ">
+                and t_dept.level = #{params.entity.level}
+            </if>
+            <if test=" params.entity.isDefault != null ">
+                and t_dept.is_default = #{params.entity.isDefault}
+            </if>
+        </where>
+        order by t_dept.level, t_dept.seq
+    </select>
+
+    <select id="customSelectPage" resultMap="baseResultMap">
+        select <include refid="baseCol" />
+        from t_dept t_dept
+        <where>
+            <if test=" params.entity.deptName != null and params.entity.deptName != ''.toString() ">
+                and instr(t_dept.dept_name, #{params.entity.deptName}) > 0
+            </if>
+            <if test=" params.entity.fullName != null and params.entity.fullName != ''.toString() ">
+                and instr(t_dept.full_name, #{params.entity.fullName}) > 0
+            </if>
+            <if test=" params.entity.pid != null ">
+                and t_dept.pid = #{params.entity.pid}
+            </if>
+            <if test=" params.entity.level != null ">
+                and t_dept.level = #{params.entity.level}
+            </if>
+            <if test=" params.entity.isDefault != null ">
+                and t_dept.is_default = #{params.entity.isDefault}
+            </if>
+        </where>
+        order by t_dept.level, t_dept.seq
+    </select>
+
+</mapper>

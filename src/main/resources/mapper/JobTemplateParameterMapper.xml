@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.example.mapper.JobTemplateParameterMapper">
+
+    <sql id="baseCol">
+        t_job_template_parameter.id t_job_template_parameter_id, t_job_template_parameter.parameter_name t_job_template_parameter_parameter_name,
+        t_job_template_parameter.parameter_type t_job_template_parameter_parameter_type, t_job_template_parameter.parameter_desc t_job_template_parameter_parameter_desc,
+        t_job_template_parameter.job_template_id t_job_template_parameter_job_template_id
+    </sql>
+
+    <resultMap id="baseResultMap" type="com.example.model.po.JobTemplateParameter">
+        <id column="t_job_template_parameter_id" property="id" />
+        <result column="t_job_template_parameter_parameter_name" property="parameterName" />
+        <result column="t_job_template_parameter_parameter_type" property="parameterType" />
+        <result column="t_job_template_parameter_parameter_desc" property="parameterDesc" />
+        <result column="t_job_template_parameter_job_template_id" property="jobTemplateId" />
+    </resultMap>
+
+</mapper>

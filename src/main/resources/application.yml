@@ -1,0 +1,223 @@
+spring:
+  profiles:
+    active: @profileActive@
+
+  servlet:
+    multipart:
+      max-file-size: 50MB # 单个文件的最大值
+      max-request-size: 200MB # 多个文件的总大小
+
+  # 数据源
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    platform: mysql
+    druid:
+      time-between-eviction-runs-millis: 60000  # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      min-evictable-idle-time-millis: 300000  # 指定一个空闲连接最少空闲多久后可被清除，单位是毫秒
+      validationQuery: SELECT 'x'
+      test-while-idle: true  # 当连接空闲时，是否执行连接测试
+      test-on-borrow: false  # 当从连接池借用连接时，是否测试该连接
+      test-on-return: false  # 在连接归还到连接池时是否测试该连接
+      filters: wall,stat  # 配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+      pool-prepared-statements: true
+      connection-properties: druid.stat.slowSqlMillis=1000;druid.stat.logSlowSql=true;config.decrypt=true
+      web-stat-filter:
+        enabled: true
+        url-pattern: /*
+        exclusions: /druid/*,*.js,*.gif,*.jpg,*.bmp,*.png,*.css,*.ico
+        session-stat-enable: true
+        session-stat-max-count: 10
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        reset-enable: true
+        login-username: admin
+        login-password: 123
+        allow:
+
+  # spring cache
+  cache:
+    type: redis
+    redis:
+      use-key-prefix: true # key使用前缀，默认ture
+      key-prefix: demo # key前缀
+      cache-null-values: false # 缓存为null的value，默认true
+      time-to-live: 30m # 缓存有效时间
+
+  # kafka
+  kafka:
+    producer:
+      # 发生错误后，消息重发的次数。
+      retries: 3
+      # 当有多个消息需要被发送到同一个分区时，生产者会把它们放在同一个批次里。该参数指定了一个批次可以使用的内存大小，按照字节数计算。
+      batch-size: 16384
+      # 设置生产者内存缓冲区的大小。
+      buffer-memory: 33554432
+      # 键的序列化方式
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # 值的序列化方式
+      value-serializer: com.example.kafka.CustomJsonSerializer
+      # acks=0 ： 生产者在成功写入消息之前不会等待任何来自服务器的响应。
+      # acks=1 ： 只要集群的首领节点收到消息，生产者就会收到一个来自服务器成功响应。
+      # acks=all ：只有当所有参与复制的节点全部收到消息时，生产者才会收到一个来自服务器的成功响应。
+      acks: all
+    consumer:
+      # 消费者组
+      group-id: spring-boot-demo-default-consumer
+      # 自动提交的时间间隔 在spring boot 2.X 版本中这里采用的是值的类型为Duration 需要符合特定的格式，如1S,1M,2H,5D
+      # 当enable-auto-commit为true时有效
+      #auto-commit-interval: 1S
+      # 该属性指定了消费者在读取一个没有偏移量的分区或者偏移量无效的情况下该作何处理：
+      # latest（默认值）在偏移量无效的情况下，消费者将从最新的记录开始读取数据（在消费者启动之后生成的记录）
+      # earliest ：在偏移量无效的情况下，消费者将从起始位置读取分区的记录
+      auto-offset-reset: latest
+      # 设置为true表示使用kafka默认的提交模式，false表示使用spring提供的人工提交模式
+      enable-auto-commit: false
+      # 键的反序列化方式
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # 值的反序列化方式
+      value-deserializer: com.example.kafka.CustomJsonDeserializer
+    listener:
+      # 在侦听器容器中运行的线程数。
+      concurrency: 5
+      # 当自动提交设置为false时，设置spring人工提交模式
+      # record 每处理一条记录提交
+      # batch 每次poll的时候批量提交，默认
+      # time 每间隔ack-time提交，需要设置ack-time属性
+      # count 累积达到ack-count提交
+      # count_time ack-time和ack-count中满足任何一个就提交
+      # munual listener中接收AcknowledgingMessageListener类型的参数，调用acknowledge()方法提交，批量提交
+      # manual_immediate 和munul一样，但是调用方法后会立刻提交
+      ack-mode: batch
+
+  # 定时任务
+  quartz:
+    auto-startup: true # 自动启动，默认true
+    startup-delay: 0s # 延迟启动，默认0s
+    job-store-type: jdbc # 任务保存方式，默认memory（内存）
+    wait-for-jobs-to-complete-on-shutdown: true # 关闭时等待任务执行完毕，默认false
+    overwrite-existing-jobs: false # 覆盖已有job，默认false
+    jdbc:
+      initialize-schema: never # 初始化数据库，默认embedded
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceId: AUTO # ID设置为自动获取，每一个必须不同，所有调度器实例中是唯一的
+            instanceName: clusteredScheduler # 任务调度器名称
+            makeSchedulerThreadDaemon: true # 指定调度程序的主线程是否应该是守护线程
+          jobStore:
+            # 使用spring管理的数据源代替quartz管理的数据源，当设置了SchedulerFactoryBean的datasource属性时默认生效
+            class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate # 数据库方言
+            tablePrefix: QRTZ_ # quartz表名前缀，默认QRTZ_
+            isClustered: true # 加入集群
+            clusterCheckinInterval: 10000 # 集群检查间隔（毫秒）
+            useProperties: false # 是否处理properties文件，默认false
+          threadPool:
+            class: org.quartz.simpl.SimpleThreadPool # 线程池
+            makeThreadsDaemons: true # 生成线程守护进程
+            threadCount: 10 # 线程数量
+            threadPriority: 5 # 线程优先级
+            threadsInheritContextClassLoaderOfInitializingThread: true # 线程继承初始化线程的上下文类加载程序，默认false
+
+  # 邮件
+  mail:
+    host: smtp.163.com
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          socketFactory:
+            # SSL证书Socket工厂
+            class: javax.net.ssl.SSLSocketFactory
+            # 使用SMTPS协议465端口
+            port: 465
+          ssl:
+            trust: smtp.163.com
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  jetty:
+    acceptors: -1 # 接收线程数，默认-1，根据运行环境派生
+    selectors: -1 # 选择器线程数，默认-1，根据运行环境派生
+    max-http-post-size: 1048576 # post请求最大字节数，单位byte
+    accesslog:
+      filename: ${log.home}/jetty_access_yyyy_mm_dd.log # 日志文件名，yyyy_MM_dd是日期格式占位符，最终会被file-date-format配置的格式代替
+      file-date-format: yyyy_MM_dd # 日志文件日期格式
+      retention-period: 31 # 日志保留天数，默认31
+      append: true # 追加日志，默认false，重启后旧日志另存，重新创建新日志
+      extended-format: true # 启用扩展NCSA格式，默认false
+      date-format: yyyy-MMM-dd HH:mm:ss.SSS # 日志内容时间格式，默认dd/MMM/yyyy:HH:mm:ss Z
+      locale: zh_CN # 日志语言
+      time-zone: GMT+8 # 时区，默认GMT
+      log-cookies: true # 记录cookie，默认false
+      log-server: true # 记录主机名，默认false
+      log-latency: true # 记录请求处理时间，默认false
+
+# mybatis plus
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*Mapper.xml # mapper文件路径
+  type-aliases-package: com.example.model # 实体扫描，多个package用逗号或者分号分隔
+  configuration:
+    map-underscore-to-camel-case: true # 驼峰命名
+    cache-enabled: false # 是否开启缓存
+  global-config:
+    db-config:
+      db-type: mysql # 数据库类型
+      id-type: auto # 主键自增
+      field-strategy: not_empty  # 非空判断
+      table-underline: true # 表名是否使用下划线命名，默认数据库表使用下划线命名
+      table-prefix: t_ # 表名前缀
+      capital-mode: true # 是否开启大写命名，默认不开启
+      logic-delete-value: 1 # 逻辑已删除值，逻辑删除下有效
+      logic-not-delete-value: 0 # 逻辑未删除值，逻辑删除下有效
+      column-like: false # 是否开启LIKE查询，即根据entity自动生成的where条件中String类型字段是否使用LIKE，默认不开启
+
+# 日志
+logging:
+  config: classpath:logback-spring.xml
+
+log:
+  root-level: INFO # 日志级别
+  max-size: 30MB # 日志最大大小
+  max-history: 30 # 日志保留天数
+  charset: UTF-8 # 日志编码
+
+token:
+  expire-seconds: 604800 # token过期时间（秒），7天
+  jwt-secret: SPRING-BOOT-DEMO # jwt密钥
+
+resource:
+  type:
+    http: http # 资源类型：http
+    websocket: websocket # 资源类型：websocket
+
+websocket:
+  destination:
+    broadcast: /topic/broadcast
+    chat: /topic/chat
+
+attachment:
+  address-prefix: /demofile # 文件访问前缀
+  file-separator: / # 文件路径分隔符
+
+mail:
+  max-retry: 3 # 发送邮件失败时的最大重试次数
+
+retrieve-password:
+  max-retry: 3 # 发送找回密码验证码失败重试次数
+  min-wait: 60 # 发送找回密码验证码最小等待时间，秒
+  expire: 30 # 验证码有效期，分钟
+
+kafka:
+  consumer:
+    websocket:
+      properties:
+        group.id: spring-boot-demo-websocket-consumer-1
